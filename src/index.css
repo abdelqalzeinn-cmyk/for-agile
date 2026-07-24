@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@import "./styles/sidebar.css";
+@import "./styles/chat.css";
+@import "./styles/toolcard.css";
+@import "./styles/composer.css";
+@import "./styles/panels.css";
+
+/* ============================================================
+   THEME TOKENS — ported verbatim from the original index.html :root
+   ============================================================ */
+:root {
+  --bg-primary: #0a0805;
+  --bg-secondary: #120e09;
+  --bg-tertiary: #241c11;
+  --chat-bg: #0b0906;
+  --chat-panel: #0a0805;
+  --chat-composer: #161009;
+  --border-color: rgba(201, 162, 78, 0.16);
+  --bg-input: #1b140b;
+  --bg-hover: #1c150c;
+  --text: #f2e8d6;
+  --text-dim: #b8a67f;
+  --text-faint: #83734f;
+  --violet: #c9a24e;
+  --violet-soft: #7c5f2c;
+  --user-grad-top: #8f6d2e;
+  --user-grad-bottom: #4f3a15;
+  --think: #e0b45f;
+  --tool: #4f9d7c;
+  --danger: #b3453f;
+  --gold-hi: #f0d38a;
+  --gold-line: linear-gradient(90deg, transparent, rgba(201, 162, 78, 0.55), transparent);
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Fira Code', monospace;
+}
+
+/* ============================================================
+   GLOBAL RESET + BASE
+   ============================================================ */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  font-family: var(--font-sans);
+  background: var(--chat-panel);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  background-image:
+    radial-gradient(1200px 800px at 15% -10%, rgba(201, 162, 78, 0.06), transparent 55%),
+    radial-gradient(900px 700px at 105% 10%, rgba(201, 162, 78, 0.045), transparent 60%);
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--violet-soft); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--violet); }
+::-webkit-scrollbar-track { background: transparent; }

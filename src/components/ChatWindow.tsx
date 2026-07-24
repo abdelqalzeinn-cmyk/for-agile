@@ -2,9 +2,10 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageBubble } from './MessageBubble';
 import { Composer } from './Composer';
+import { ModelPicker } from './ModelPicker';
 import { usePolling } from '../hooks/usePolling';
 import { createConversation, getMessages } from '../lib/api';
-import type { ActiveStream, Conversation } from '../lib/types';
+import type { ActiveStream, Conversation, ModelInfo } from '../lib/types';
 
 interface ChatWindowProps {
   onSend: (text: string, attachments: unknown[]) => void;
@@ -15,6 +16,9 @@ interface ChatWindowProps {
   setConversations: (updater: (prev: Conversation[]) => Conversation[]) => void;
   pairingStatus: 'disconnected' | 'connecting' | 'connected';
   onOpenUsage: () => void;
+  models: ModelInfo[];
+  selectedModel: string;
+  onModelChange: (m: string) => void;
 }
 
 export function ChatWindow({
@@ -26,6 +30,9 @@ export function ChatWindow({
   setConversations,
   pairingStatus,
   onOpenUsage,
+  models,
+  selectedModel,
+  onModelChange,
 }: ChatWindowProps) {
   const logRef = useRef<HTMLDivElement>(null);
 
@@ -130,6 +137,12 @@ export function ChatWindow({
             0%
           </span>
         </button>
+        <ModelPicker
+          models={models}
+          selected={selectedModel}
+          onChange={onModelChange}
+        />
+
         <div className="status">
           <span className="dot" />
           <span>connecting...</span>

@@ -4,7 +4,6 @@ import { Sidebar } from './components/Sidebar';
 import { ChatWindow } from './components/ChatWindow';
 import { SettingsPanel } from './components/SettingsPanel';
 import { UsagePanel } from './components/UsagePanel';
-import { ModelPicker } from './components/ModelPicker';
 import { usePolling } from './hooks/usePolling';
 import { useUsage } from './hooks/useUsage';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
@@ -332,6 +331,9 @@ function App() {
         setConversations={setConversations}
         pairingStatus={pairingStatus}
         onOpenUsage={() => setShowUsage(true)}
+        models={modelCatalog}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
       />
 
       <SettingsPanel
@@ -347,12 +349,6 @@ function App() {
         isOpen={showUsage}
         onClose={() => setShowUsage(false)}
         onRefresh={fetchUsage}
-      />
-
-      <ModelPicker
-        models={modelCatalog}
-        selected={selectedModel}
-        onChange={setSelectedModel}
       />
 
       {/* Pairing overlay */}

@@ -77,8 +77,8 @@ export function renderUsageRows(u: UsageData | null): UsageRow[] {
 export function useUsage(isPanelOpen: boolean) {
   const [usage, setUsage] = useState<UsageData | null>(null);
 
-  const fetchUsage = useCallback(async (token: string | null) => {
-    if (!token) return;
+  const fetchUsage = useCallback(async (token?: string | null) => {
+    if (token === null) return;
     try {
       const data = await getWorkspace() as Record<string, unknown>;
       if (data && data.usage && typeof data.usage === 'object') {

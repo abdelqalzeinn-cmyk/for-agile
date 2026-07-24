@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Conversation, ActiveStream, UsageData, ModelInfo, WorkspaceProfile } from '../lib/types';
 import type { AppState, AppActions } from './AppContext.types';
 
@@ -38,6 +39,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setShowUsage,
       setStatusText,
       setPairingStatus,
+      setMessages: setConversations,
     },
   };
 

@@ -3,24 +3,41 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageBubble } from './MessageBubble';
 import { Composer } from './Composer';
 import { usePolling } from '../hooks/usePolling';
-import { useApp } from '../context/AppContext';
 import { createConversation, getMessages } from '../lib/api';
-import type { ActiveStream } from '../lib/types';
+import type { ActiveStream, Conversation } from '../lib/types';
 
 interface ChatWindowProps {
   onSend: (text: string, attachments: unknown[]) => void;
   activeStream: ActiveStream | null;
   setActiveStream: (s: ActiveStream | null) => void;
+  conversations: Conversation[];
+  activeId: string | null;
+  setConversations: (updater: (prev: Conversation[]) => Conversation[]) => void;
+  pairingStatus: 'disconnected' | 'connecting' | 'connected';
+  onOpenUsage: () => void;
 }
 
-export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindowProps) {
-  const { state, actions } = useApp();
+export function ChatWindow({
+  onSend,
+  activeStream,
+  setActiveStream,
+  conversations,
+  activeId,
+  setConversations,
+  pairingStatus,
+  onOpenUsage,
+}: ChatWindowProps) {
   const logRef = useRef<HTMLDivElement>(null);
 
   usePolling({
     activeStream,
     setActiveStream,
-    onMessages: (msgs) => actions.setMessages(msgs),
+    onMessages: (msgs) => {
+      setConversations(prev => prev.map(c => {
+        if (c.id === activeId) return { ...c, messages: msgs as Conversation['messages'] };
+        return c;
+      }));
+    },
     onPendingTool: () => {},
   });
 
@@ -38,10 +55,9 @@ export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindow
       for (let i = 0; i < 30; i++) {
         await new Promise(resolve => setTimeout(resolve, 700));
         const result = await getMessages(remoteId);
-        const blocks = result && (result.blocks || result.messages || []);
-        const assistant = Array.isArray(blocks)
-          ? [...blocks].reverse().find(b => (b.kind || b.role) === 'assistant' && (b.text || b.content))
-          : null;
+        const blocksRaw = result && (result.blocks || result.messages || []);
+        const blocks = Array.isArray(blocksRaw) ? (blocksRaw as Record<string, unknown>[]) : [];
+        const assistant = [...blocks].reverse().find(b => (b.kind || b.role) === 'assistant' && (b.text || b.content));
         if (assistant) {
           const text = String((assistant as Record<string, unknown>).text || (assistant as Record<string, unknown>).content || '').trim();
           if (text) return text;
@@ -76,18 +92,21 @@ export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindow
   }, [isNearBottom]);
 
   // Auto-scroll to bottom when new messages arrive (if near bottom)
-  const messages = state.conversations.find(c => c.id === state.activeId)?.messages || [];
+  const messages = conversations.find(c => c.id === activeId)?.messages || [];
 
   // Thinking indicator — distinct from tool-card streaming state
-  const showThinking = activeStream && activeStream.cid === state.conversations.find(c => c.id === state.activeId)?.remoteId
+  const showThinking = activeStream
+    && activeStream.cid === conversations.find(c => c.id === activeId)?.remoteId
     && !messages.some(m => m.role === 'assistant');
+
+  const activeTitle = conversations.find(c => c.id === activeId)?.title || 'New conversation';
 
   return (
     <div id="main" className="flex-1 flex flex-col bg-[var(--chat-bg)]">
       <header className="h-14 flex items-center gap-3 px-4 border-b border-[var(--border-color)] bg-[var(--chat-bg)]">
         <button id="open-sidebar-btn" title="Open sidebar" className="hidden sm:flex">☰</button>
         <h1 className="font-display italic text-sm text-[var(--text)] overflow-hidden text-ellipsis whitespace-nowrap flex-1">
-          {state.conversations.find(c => c.id === state.activeId)?.title || 'New conversation'}
+          {activeTitle}
         </h1>
         <a
           className="upgrade-link"
@@ -100,7 +119,7 @@ export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindow
         <button
           id="usage-btn"
           title="Usage"
-          onClick={() => actions.setShowUsage(true)}
+          onClick={onOpenUsage}
           className="bg-[var(--bg-tertiary)] border border-[var(--border-color)] text-[var(--text-dim)] cursor-pointer px-3 py-1.5 rounded-lg font-semibold text-xs flex items-center gap-2"
         >
           <span style={{ color: '#e8b923' }}>Usage</span>
@@ -130,7 +149,13 @@ export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindow
               message={m}
               onResend={(_text) => {
                 // Resend: drop trailing non-user messages, re-send
-                actions.setMessages(messages.filter((_, j) => j <= messages.findIndex(mm => mm.role === 'user')));
+                setConversations(prev => prev.map(c => {
+                  if (c.id === activeId) {
+                    const keep = c.messages.filter((_, j) => j <= c.messages.findIndex(mm => mm.role === 'user'));
+                    return { ...c, messages: keep };
+                  }
+                  return c;
+                }));
               }}
             />
           ))
@@ -170,7 +195,7 @@ export function ChatWindow({ onSend, activeStream, setActiveStream }: ChatWindow
       <Composer
         onSend={handleSend}
         onImproving={handleImprove}
-        disabled={state.pairingStatus !== 'connected'}
+        disabled={pairingStatus !== 'connected'}
       />
     </div>
   );

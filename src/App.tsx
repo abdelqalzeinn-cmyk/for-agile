@@ -14,7 +14,7 @@ import {
   deleteConversation as apiDeleteConversation, getWorkspace,
 } from './lib/api';
 import { copyText } from './lib/markdown';
-import type { Conversation, ActiveStream, UsageData, ModelInfo, WorkspaceProfile } from './lib/types';
+import type { Conversation, ActiveStream, UsageData, ModelInfo, WorkspaceProfile, Attachment } from './lib/types';
 
 function App() {
   const [pairingStatus, setPairingStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -32,11 +32,11 @@ function App() {
   const [pairingCode, setPairingCode] = useState('');
   const [pairingError, setPairingError] = useState('');
   const [exchangeAttempts, setExchangeAttempts] = useState(0);
-  const exchangeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const exchangeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const { startBlockPoll, abortStream } = usePolling({
+  const { startBlockPoll } = usePolling({
     activeStream,
     setActiveStream,
     onMessages: (msgs) => {
@@ -104,7 +104,8 @@ function App() {
     try {
       const data = await getWorkspace() as Record<string, unknown>;
       setAccount(data && (data.user || data.profile || data.account || data) as WorkspaceProfile);
-      setModelCatalog((data && (data.models || data.model_catalog || data.catalog)) || []);
+      const models = (data.models || data.model_catalog || data.catalog) as ModelInfo[] | undefined;
+      setModelCatalog(models || []);
       if (data && data.usage && typeof data.usage === 'object') {
         setUsage(data.usage as UsageData);
       }
@@ -224,7 +225,7 @@ function App() {
     // Add user message locally
     setConversations(prev => prev.map(c => {
       if (c.id === activeId) {
-        return { ...c, messages: [...c.messages, { role: 'user', text, meta: { attachments } }] };
+        return { ...c, messages: [...c.messages, { role: 'user', text, meta: { attachments: attachments as Attachment[] } }] };
       }
       return c;
     }));
@@ -247,12 +248,13 @@ function App() {
 
       // Update conversation remoteId
       if (data.conversation && (data.conversation as Record<string, unknown>).id) {
+        const conv = data.conversation as Record<string, unknown>;
         setConversations(prev => prev.map(c => {
           if (c.id === activeId) {
             return {
               ...c,
-              remoteId: String((data.conversation as Record<string, unknown>).id),
-              title: (data.conversation as Record<string, unknown>).name || c.title,
+              remoteId: String(conv.id),
+              title: (typeof conv.name === 'string' ? conv.name : null) || c.title,
             };
           }
           return c;
@@ -325,6 +327,11 @@ function App() {
         onSend={handleSend}
         activeStream={activeStream}
         setActiveStream={setActiveStream}
+        conversations={conversations}
+        activeId={activeId}
+        setConversations={setConversations}
+        pairingStatus={pairingStatus}
+        onOpenUsage={() => setShowUsage(true)}
       />
 
       <SettingsPanel

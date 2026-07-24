@@ -11,7 +11,7 @@ export function tostringSafe(v: unknown): string {
 
 export function isToolBlock(b: Record<string, unknown> | null | undefined): boolean {
   if (!b) return false;
-  const r = (b.role || b.kind || '').toLowerCase();
+  const r = String(b.role || b.kind || '').toLowerCase();
   const toolRoles = ['tool', 'executed_code', 'tool_use', 'tool_call', 'function_call', 'code', 'luau', 'lua', 'script', 'action', 'command'];
   return (
     toolRoles.includes(r) ||
@@ -23,9 +23,9 @@ export function isToolBlock(b: Record<string, unknown> | null | undefined): bool
 export function parseBlockRole(raw: Record<string, unknown> | null | undefined): 'user' | 'assistant' | 'tool' | 'thinking' {
   if (!raw) return 'assistant';
   if (isToolBlock(raw)) return 'tool';
-  const role = (raw.role || raw.kind || '').toLowerCase();
+  const role = String(raw.role || raw.kind || '').toLowerCase();
   if (role === 'reasoning' || role === 'thought' || role === 'thinking' || role === 'tool_result' || role === 'tool_output' || role === 'error' || role === 'notice' || role === 'log') return 'thinking';
-  if (role === 'user' || role === 'assistant' || role === 'system') return role;
+  if (role === 'user' || role === 'assistant' || role === 'system') return 'assistant';
   return 'assistant';
 }
 
@@ -44,12 +44,12 @@ export function extractInlineBlocks(b: Record<string, unknown>): { role: 'tool' 
         role: 'tool',
         text: '',
         meta: {
-          name: fn.name || cObj.name || 'tool',
-          code: args || (cObj.code || ''),
-          status: cObj.tool_request_id ? 'pending approval' : (cObj.status || 'success'),
-          tool_request_id: cObj.tool_request_id || '',
-          op_id: b.op_id || b.operation_id || '',
-          conversation_id: b.conversation_id || '',
+          name: String(fn.name || cObj.name || 'tool'),
+          code: String(args || (cObj.code || '')),
+          status: cObj.tool_request_id ? 'pending approval' : String(cObj.status || 'success'),
+          tool_request_id: String(cObj.tool_request_id || ''),
+          op_id: String(b.op_id || b.operation_id || ''),
+          conversation_id: String(b.conversation_id || ''),
         },
       });
     }

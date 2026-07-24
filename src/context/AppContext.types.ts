@@ -28,4 +28,5 @@ export interface AppActions {
   setShowUsage: (v: boolean) => void;
   setStatusText: (s: string) => void;
   setPairingStatus: (s: 'disconnected' | 'connecting' | 'connected') => void;
+  setMessages: (updater: (prev: Conversation[]) => Conversation[]) => void;
 }

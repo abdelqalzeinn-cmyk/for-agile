@@ -5,9 +5,9 @@
    "~100s hard timeout" was wrong — each tick awaits real network
    calls, so tick count never reliably maps to ~100s.
    ============================================================ */
-import { useEffect, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import type { Conversation, Message, ActiveStream } from '../lib/types';
-import { api, getOperationEvents, getMessages, abortOperation } from '../lib/api';
+import { getOperationEvents, getMessages, abortOperation } from '../lib/api';
 import { parseBlockRole, isToolBlock, extractInlineBlocks, ingestToolRequest, tostringSafe } from '../lib/blocks';
 
 interface UsePollingProps {
@@ -51,7 +51,8 @@ export function usePolling({ activeStream, setActiveStream, onMessages, onPendin
       if (!Array.isArray(list)) return;
       for (const b of list) {
         if (b && typeof b === 'object' && (('block_id' in b) || ('id' in b))) {
-          liveBlocks.set((b as Record<string, unknown>).block_id || (b as Record<string, unknown>).id, b as Record<string, unknown>);
+          const rec = b as Record<string, unknown>;
+          liveBlocks.set(String(rec.block_id || rec.id), rec);
         }
       }
     };
@@ -138,7 +139,7 @@ export function usePolling({ activeStream, setActiveStream, onMessages, onPendin
         }
 
         if (opId) {
-          const ev = await getOperationEvents(opId, afterSeq) as Record<string, unknown>;
+          const ev = await getOperationEvents(opId, afterSeq) as unknown as Record<string, unknown>;
           const evs = (ev.events || []) as Record<string, unknown>[];
           if (!debugLogged && evs.length) {
             debugLogged = true;
@@ -148,7 +149,7 @@ export function usePolling({ activeStream, setActiveStream, onMessages, onPendin
           for (const e of evs) {
             if (e.type === 'block_upsert' && e.payload && (e.payload as Record<string, unknown>).block) {
               const blk = (e.payload as Record<string, unknown>).block as Record<string, unknown>;
-              if (blk.block_id || blk.id) liveBlocks.set(blk.block_id || blk.id, blk);
+              if (blk.block_id || blk.id) liveBlocks.set(String(blk.block_id || blk.id), blk);
             }
 
             // Tool approval requests
@@ -164,7 +165,7 @@ export function usePolling({ activeStream, setActiveStream, onMessages, onPendin
               ingestToolRequest(liveBlocks, opId, e.payload as Record<string, unknown>);
             }
             if (e.payload && ((e.payload as Record<string, unknown>).pending_tool_request || (e.payload as Record<string, unknown>).tool_request)) {
-              ingestToolRequest(liveBlocks, opId, (e.payload as Record<string, unknown>).pending_tool_request || (e.payload as Record<string, unknown>).tool_request);
+              ingestToolRequest(liveBlocks, opId, (e.payload as Record<string, unknown>).pending_tool_request as Record<string, unknown> || (e.payload as Record<string, unknown>).tool_request as Record<string, unknown>);
             }
 
             // Delta-style streaming
@@ -200,7 +201,7 @@ export function usePolling({ activeStream, setActiveStream, onMessages, onPendin
         // but in React we simplify to every tick for correctness.
         try {
           const payload = await getMessages(cid) as Record<string, unknown>;
-          mergeBlocksFromList(payload.blocks || payload.messages || []);
+          mergeBlocksFromList((payload.blocks || payload.messages || []) as unknown[]);
         } catch { /* transient, ignore */ }
 
         renderFromLive();

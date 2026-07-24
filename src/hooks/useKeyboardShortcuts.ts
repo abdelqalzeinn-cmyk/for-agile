@@ -5,11 +5,12 @@
    Plus composer-level Enter/Shift+Enter.
    ============================================================ */
 import { useEffect } from 'react';
+import type { RefObject } from 'react';
 
 interface UseKeyboardShortcutsProps {
   onNewConversation: () => void;
   onEscape: () => void;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
   onSend: () => void;
 }
 

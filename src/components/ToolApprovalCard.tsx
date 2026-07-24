@@ -14,7 +14,7 @@ export function ToolApprovalCard({ message, onDecision, onResend }: ToolApproval
   const { meta } = message;
   const m = meta || {};
   const pendingApproval = m.status === 'pending approval' && m.tool_request_id && m.op_id;
-  const expTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const expTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isOpen, setIsOpen] = useState(pendingApproval || !!m.code);
 
   const clearTimer = () => {

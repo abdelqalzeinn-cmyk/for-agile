@@ -61,7 +61,7 @@ export function ModelPicker({ models, selected, onChange }: ModelPickerProps) {
 
   return (
     <div className="model-picker-wrap">
-      <div className="model-menu" ref={menuRef}>
+      <div className={"model-menu" + (menuOpen ? " open" : "")} ref={menuRef}>
         <button
           type="button"
           id="model-menu-trigger"

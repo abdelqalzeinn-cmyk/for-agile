@@ -31,6 +31,7 @@ function App() {
   const [pairingCode, setPairingCode] = useState('');
   const [pairingError, setPairingError] = useState('');
   const [exchangeAttempts, setExchangeAttempts] = useState(0);
+  const [openModelMenuSignal, setOpenModelMenuSignal] = useState(0);
   const exchangeTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -320,6 +321,8 @@ function App() {
         onFilterChange={setSidebarFilter}
         pairingStatus={pairingStatus}
         onUnpair={() => unpair('Disconnected')}
+        onOpenSettings={() => setShowSettings(true)}
+        onOpenModels={() => setOpenModelMenuSignal(n => n + 1)}
       />
 
       <ChatWindow
@@ -334,6 +337,7 @@ function App() {
         models={modelCatalog}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
+        openModelMenuSignal={openModelMenuSignal}
       />
 
       <SettingsPanel

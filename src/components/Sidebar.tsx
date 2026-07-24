@@ -13,6 +13,8 @@ interface SidebarProps {
   onFilterChange: (filter: string) => void;
   pairingStatus: 'disconnected' | 'connecting' | 'connected';
   onUnpair: () => void;
+  onOpenSettings: () => void;
+  onOpenModels: () => void;
 }
 
 export function Sidebar({
@@ -26,6 +28,8 @@ export function Sidebar({
   onFilterChange,
   pairingStatus,
   onUnpair,
+  onOpenSettings,
+  onOpenModels,
 }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -97,6 +101,7 @@ export function Sidebar({
         <motion.button
           className="side-nav-item"
           data-panel="models"
+          onClick={onOpenModels}
           whileHover={{ backgroundColor: 'rgba(201,162,78,0.12)', color: 'var(--gold-hi)' }}
         >
           AI <span>Models</span>
@@ -217,6 +222,7 @@ export function Sidebar({
           <motion.button
             id="settings-btn"
             title="Settings"
+            onClick={onOpenSettings}
             whileHover={{ color: 'var(--gold-hi)' }}
             whileTap={{ scale: 0.9 }}
           >

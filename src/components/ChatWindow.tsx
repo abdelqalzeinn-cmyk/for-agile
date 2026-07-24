@@ -19,6 +19,7 @@ interface ChatWindowProps {
   models: ModelInfo[];
   selectedModel: string;
   onModelChange: (m: string) => void;
+  openModelMenuSignal: number;
 }
 
 export function ChatWindow({
@@ -33,8 +34,16 @@ export function ChatWindow({
   models,
   selectedModel,
   onModelChange,
+  openModelMenuSignal,
 }: ChatWindowProps) {
   const logRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (openModelMenuSignal > 0) {
+      const trigger = document.getElementById('model-menu-trigger');
+      trigger?.click();
+    }
+  }, [openModelMenuSignal]);
 
   usePolling({
     activeStream,
@@ -142,11 +151,6 @@ export function ChatWindow({
           selected={selectedModel}
           onChange={onModelChange}
         />
-
-        <div className="status">
-          <span className="dot" />
-          <span>connecting...</span>
-        </div>
       </header>
 
       <div id="log" ref={logRef} className="flex-1 overflow-y-auto py-7 px-4 max-w-[820px] w-full mx-auto">

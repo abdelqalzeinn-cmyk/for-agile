@@ -10,7 +10,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import {
   getToken, setToken, exchangeCode, heartbeat,
   listConversations, createConversation, sendMessage,
-  deleteConversation as apiDeleteConversation, getWorkspace,
+  deleteConversation as apiDeleteConversation, getWorkspace, fetchModderProfile,
 } from './lib/api';
 import { copyText } from './lib/markdown';
 import type { Conversation, ActiveStream, UsageData, ModelInfo, WorkspaceProfile, Attachment } from './lib/types';
@@ -133,6 +133,16 @@ function App() {
 
     syncAccountConversations();
     fetchWorkspaceProfile();
+    fetchModderProfile().then((modder) => {
+      if (modder) {
+        setAccount((prev) => ({
+          ...(prev || {}),
+          roblox_username: modder.roblox_username,
+          roblox_user_id: modder.roblox_user_id,
+          roblox_profile_image: modder.roblox_profile_image || (prev && (prev as Record<string, unknown>).roblox_profile_image),
+        } as WorkspaceProfile));
+      }
+    });
 
     if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
     heartbeatTimerRef.current = setInterval(checkPluginConnection, 5000);
@@ -323,6 +333,7 @@ function App() {
         onUnpair={() => unpair('Disconnected')}
         onOpenSettings={() => setShowSettings(true)}
         onOpenModels={() => setOpenModelMenuSignal(n => n + 1)}
+        account={account}
       />
 
       <ChatWindow

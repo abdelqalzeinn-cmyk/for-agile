@@ -167,3 +167,52 @@ export async function submitToolDecision(opId: string, decision: ToolDecision): 
 export async function getWorkspace(): Promise<WorkspaceProfile> {
   return api('/workspace') as Promise<WorkspaceProfile>;
 }
+
+// Modder profile: GET /modders/me via broker proxy -> { username, id }
+export async function getModderMe(): Promise<{ username: string; id?: string }> {
+  return api('/modders/me') as Promise<{ username: string; id?: string }>;
+}
+
+// CORS-safe Roblox public-data proxy (broker /roblox-proxy/<host>/<path>).
+// Forwards to users.roblox.com / thumbnails.roblox.com without browser CORS blocks.
+async function robloxProxy(path: string): Promise<unknown> {
+  const token = getToken();
+  if (!token) throw new Error('Not paired');
+  const resp = await fetch(BROKER_URL + '/roblox-proxy/' + path, {
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+  });
+  if (!resp.ok) throw new Error('roblox proxy ' + resp.status);
+  return resp.json();
+}
+
+// Resolve the modder's Roblox avatar headshot + id from their username.
+export async function fetchModderProfile(): Promise<{
+  roblox_username: string;
+  roblox_user_id: string;
+  roblox_profile_image?: string;
+} | null> {
+  try {
+    const me = await getModderMe();
+    const username = me && me.username;
+    if (!username) return null;
+    const search = (await robloxProxy(
+      'users.roblox.com/v1/users/search?keyword=' + encodeURIComponent(username) + '&limit=10'
+    )) as { data?: { id: number; name: string }[] };
+    const user =
+      (Array.isArray(search.data) && search.data.find((u) => u.name && u.name.toLowerCase() === username.toLowerCase())) ||
+      (Array.isArray(search.data) ? search.data[0] : undefined);
+    if (!user || !user.id) return null;
+    let image: string | undefined;
+    try {
+      const thumb = (await robloxProxy(
+        'thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' + user.id + '&size=150x150&format=Png'
+      )) as { data?: { imageUrl?: string }[] };
+      image = thumb.data && thumb.data[0] && thumb.data[0].imageUrl;
+    } catch {
+      image = undefined;
+    }
+    return { roblox_username: username, roblox_user_id: String(user.id), roblox_profile_image: image };
+  } catch {
+    return null;
+  }
+}

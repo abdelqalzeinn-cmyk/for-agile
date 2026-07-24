@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import type { Conversation } from '../lib/types';
+import type { Conversation, WorkspaceProfile } from '../lib/types';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -15,6 +15,7 @@ interface SidebarProps {
   onUnpair: () => void;
   onOpenSettings: () => void;
   onOpenModels: () => void;
+  account: WorkspaceProfile | null;
 }
 
 export function Sidebar({
@@ -30,6 +31,7 @@ export function Sidebar({
   onUnpair,
   onOpenSettings,
   onOpenModels,
+  account,
 }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const renameInputRef = useRef<HTMLInputElement>(null);
@@ -214,10 +216,14 @@ export function Sidebar({
           </span>
         </div>
         <div className="account-footer">
-          <div className="avatar">?</div>
+          {account && account.roblox_profile_image ? (
+            <img className="avatar" src={String(account.roblox_profile_image)} alt={account.roblox_username ? String(account.roblox_username) : 'Roblox user'} />
+          ) : (
+            <div className="avatar">{account && (account.roblox_username || account.name) ? String(account.roblox_username || account.name || '?').slice(0, 1).toUpperCase() : '?'}</div>
+          )}
           <div>
-            <strong>Roblox user</strong>
-            <small>Not connected</small>
+            <strong>{account && (account.roblox_username || account.name) ? String(account.roblox_username || account.name) : 'Roblox user'}</strong>
+            <small>{pairingStatus === 'connected' ? 'Connected' : 'Not connected'}</small>
           </div>
           <motion.button
             id="settings-btn"

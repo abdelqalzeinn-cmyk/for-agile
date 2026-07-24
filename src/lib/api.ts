@@ -13,7 +13,11 @@ import type {
   ApiError,
 } from './types';
 
-export const BROKER_URL = 'https://for-agile-broker.onrender.com';
+// Broker URL — read from Vite env (set in Render dashboard as VITE_BROKER_URL),
+// falls back to the live broker if unset.
+export const BROKER_URL: string =
+  (import.meta.env.VITE_BROKER_URL as string | undefined) ||
+  'https://for-agile-broker.onrender.com';
 export const BACKEND_URL = 'https://api.agilebot.dev';
 export const CLIENT_VERSION = '0.2.4';
 

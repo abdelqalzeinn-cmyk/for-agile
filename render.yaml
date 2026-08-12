@@ -1,0 +1,16 @@
+# Render.com deploy config — Static Site
+# One-click: render.com -> New -> Blueprint -> connect this repo.
+# Or manual: New Static Site -> connect repo -> settings below.
+services:
+  - type: static
+    name: agilebot-ui
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: VITE_BROKER_URL
+        value: https://for-agile-broker.onrender.com
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
